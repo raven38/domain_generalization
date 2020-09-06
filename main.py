@@ -24,7 +24,7 @@ def filter_dataset(dataset, f):
 def train(gpu, save_path, snapshot, batch_size):
     torch.cuda.set_device(gpu)
     device = torch.device('cuda', gpu) if torch.cuda.is_available() else 'cpu'
-    model = models.resnet13(n_classes=10)
+    model = models.resnet18(n_classes=10)
     optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999))
 
     def to_device_optimizer(opt):
