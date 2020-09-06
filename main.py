@@ -104,7 +104,7 @@ def train(gpu, save_path, snapshot, batch_size):
                 loss.backward()
                 optimizer.step()
                 
-                accuracy = (output.argmax(dim=1) == target).mean()
+                accuracy = (output.argmax(dim=1) == t).mean()
                 ppe.reporting.report({
                     'loss': loss.item(),
                     'acc': accuracy.item(),
@@ -118,7 +118,7 @@ def train(gpu, save_path, snapshot, batch_size):
                 output = model(x)
                 loss = criterion(output, t)
 
-                accuracy = (output.argmax(dim=1) == target).mean()
+                accuracy = (output.argmax(dim=1) == t).mean()
                 ppe.reporting.report({
                     'test loss': loss.item(),
                     'test acc': accuracy.item(),
