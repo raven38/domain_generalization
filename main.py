@@ -34,8 +34,8 @@ def train(gpu, save_path, snapshot, batch_size):
                     state[k] = v.to(device)
     to_device_optimizer(optimizer)
 
-    train_dataset = datasets.MNIST(root='./data/', train=True)
-    test_dataset = datasets.MNIST(root='./data/', train=False)
+    train_dataset = datasets.MNIST(root='./data/', train=True, download=True)
+    test_dataset = datasets.MNIST(root='./data/', train=False, download=True)
     train_dataset = filter_dataset(train_dataset, lambda x: x<5)
     test_dataset = filter_dataset(test_dataset, lambda x: x<5)
     print(f'train dataset size: {len(train_dataset)}')
