@@ -6,7 +6,7 @@ import numpy as np
 import pytorch_pfn_extras as ppe
 import torch
 
-from torchvision import models, datasets
+from torchvision import models, datasets, transforms
 from pytorch_pfn_extras import writing
 from pytorch_pfn_extras.training import extensions
 from torch import nn, optim
@@ -34,14 +34,21 @@ def train(gpu, save_path, snapshot, batch_size):
                     state[k] = v.to(device)
     to_device_optimizer(optimizer)
 
+    transform=transforms.Compose([
+        transforms.Resize(32),
+        transforms.Lambda(lambda x: x.convert('RGB')),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    ])
+
     train_dataset = datasets.MNIST(root='./data/', train=True, download=True)
     test_dataset = datasets.MNIST(root='./data/', train=False, download=True)
     train_dataset = filter_dataset(train_dataset, lambda x: x<5)
     test_dataset = filter_dataset(test_dataset, lambda x: x<5)
     print(f'train dataset size: {len(train_dataset)}')
     print(f'test dataset size: {len(test_dataset)}')
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, transform=trasform, shuffle=True, num_workers=1, pin_memory=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, transform=transform, shuffle=True, num_workers=1, pin_memory=True)
 
     def init_weight(m):
         if isinstance(m, nn.Conv2d):
