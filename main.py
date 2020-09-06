@@ -124,7 +124,7 @@ def train(gpu, save_path, snapshot, batch_size):
 @click.option('--mode', default='train', type=click.Choice(['train', 'eval', 'extract']))
 def main(save_path, snapshot, batch_size, mode):
     if mode == 'train':
-        train(0, save_path, snapshot)
+        train(0, save_path, snapshot, batch_size)
 
 
 if __name__ == '__main__':
