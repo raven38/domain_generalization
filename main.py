@@ -47,7 +47,7 @@ def train(gpu, save_path, snapshot, batch_size):
     test_dataset = filter_dataset(test_dataset, lambda x: x<5)
     print(f'train dataset size: {len(train_dataset)}')
     print(f'test dataset size: {len(test_dataset)}')
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, transform=trasform, shuffle=True, num_workers=1, pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, transform=transform, shuffle=True, num_workers=1, pin_memory=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, transform=transform, shuffle=True, num_workers=1, pin_memory=True)
 
     def init_weight(m):
