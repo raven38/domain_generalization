@@ -112,7 +112,7 @@ def train(gpu, save_path, snapshot, batch_size):
                     'acc': accuracy.item(),
                 })
         
-        with torhc.no_grad():
+        with torch.no_grad():
             model.eval()
             for i, batch in enumerate(test_loader):
                 x, t = batch
@@ -129,7 +129,7 @@ def train(gpu, save_path, snapshot, batch_size):
 @click.command()
 @click.option('--save_path', default='checkpoint/test', type=Path)
 @click.option('--snapshot', default=None, type=Path)
-@click.option('--batch_size', default=8, type=int)
+@click.option('--batch_size', default=32, type=int)
 @click.option('--mode', default='train', type=click.Choice(['train', 'eval', 'extract']))
 def main(save_path, snapshot, batch_size, mode):
     if mode == 'train':
