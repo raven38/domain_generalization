@@ -2,7 +2,7 @@ import matplotlib
 matplotlib.use('Agg')
 import os
 from pathlib import Path
-
+from itertools import product
 import click
 import numpy as np
 import pytorch_pfn_extras as ppe
@@ -38,6 +38,31 @@ def test(model, data, target, device, criterion):
         })                
         model.train()
 
+
+def extract_feature(gpu, save_path, snapshot, batch_size):
+    torch.cuda.set_device(gpu)
+    device = torch.device('cuda', gpu) if torch.cuda.is_available() else 'cpu'
+    model = models.resnet18(num_classes=10)
+    model.load_state_dict(torch.load(snapshot))
+    model = nn.Sequential(*list(model.children()[:-1])).to(device)
+    model.eval()
+
+    dname = list(product(['konwn', 'unknown'], ['mnist', 'svhn', 'usps']))
+    dataset = [dataset.MNIST(root='./data', train=False, download=True, transform=transform),
+               dataset.SVHN(root='./data', train=True, download=True, transform=transform),
+               dataset.USPS(root='./data', train=True, download=True, transform=transform)]
+    dataset = [filter_dataset(d, lambda x: x<5) for d in dataset] + [filter_dataset(d, lambda x: x >= 5) for d in dataset]
+    loader = [torch.utils.data.DataLoader(d, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True) for d in dataset]
+
+    for i, l in enumerate(loader):
+        features = []
+        labels = []
+        for x, _ in l:
+            x = x.to(device)
+            output = model(x)
+            features.append(output.cpu().numpy())
+        features = np.concatenate(features, axis=0)
+        np.save(f'{dname}.npy', features)
 
 def train(gpu, save_path, snapshot, batch_size):
     torch.cuda.set_device(gpu)
@@ -141,7 +166,8 @@ def train(gpu, save_path, snapshot, batch_size):
 def main(save_path, snapshot, batch_size, mode):
     if mode == 'train':
         train(0, save_path, snapshot, batch_size)
-
+    if mode = 'extract':
+        extract_feature(0, save_path, snapshot, batch_size)
 
 if __name__ == '__main__':
     main()
