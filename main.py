@@ -24,7 +24,7 @@ def filter_dataset(dataset, f):
     return dataset
 
 
-def eval(model, data, target, device, criterion):
+def test(model, data, target, device, criterion):
     with torch.no_grad():
         model.eval()
         x, t, = data.to(device), target.to(device)
@@ -86,7 +86,7 @@ def train(gpu, save_path, snapshot, batch_size):
             extensions.observe_lr(optimizer=optimizer),
             extensions.Evaluator(
                 test_loader, model,
-                eval_func=lambda data, target: test(model, data, target, device, criterion)
+                eval_func=lambda data, target: test(model, data, target, device, criterion),
                 progress_bar=True),
             extensions.PlotReport(
                 ['loss', 'acc', 'val/loss', 'val/acc'], 'epoch', filename='loss.png'),
