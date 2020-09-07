@@ -23,6 +23,22 @@ def filter_dataset(dataset, f):
         assert False, 'dataset object need to have targets or labels attributes'
     return dataset
 
+
+def eval(model, data, target, device, criterion):
+    with torch.no_grad():
+        model.eval()
+        x, t, = data.to(device), target.to(device)
+        output = model(x)
+        loss = criterion(output, t)
+
+        accuracy = (output.argmax(dim=1) == t).float().mean()
+        ppe.reporting.report({
+            'val/loss': loss.item(),
+            'val/acc': accuracy.item(),
+        })                
+        model.train()
+
+
 def train(gpu, save_path, snapshot, batch_size):
     torch.cuda.set_device(gpu)
     device = torch.device('cuda', gpu) if torch.cuda.is_available() else 'cpu'
@@ -61,17 +77,21 @@ def train(gpu, save_path, snapshot, batch_size):
             nn.init.normal_(m.weight, 0, 0.02)
             nn.init.zeros_(m.bias)
     model.apply(init_weight)
-
+    criterion = nn.CrossEntropyLoss()
     iters_per_epoch = len(train_loader)
     if gpu == 0:
         extension = [
             extensions.LogReport(),
             extensions.ProgressBar(),
             extensions.observe_lr(optimizer=optimizer),
+            extensions.Evaluator(
+                test_loader, model,
+                eval_func=lambda data, target: test(model, data, target, device, criterion)
+                progress_bar=True),
             extensions.PlotReport(
-                ['loss', 'acc', 'test loss', 'test acc'], 'epoch', filename='loss.png'),
+                ['loss', 'acc', 'val/loss', 'val/acc'], 'epoch', filename='loss.png'),
             extensions.PrintReport(['epoch', 'iteration',
-                                    'loss', 'acc', 'test loss', 'test acc',
+                                    'loss', 'acc', 'val/loss', 'val/acc',
                                     'lr']),
         ]
     else:
@@ -92,7 +112,7 @@ def train(gpu, save_path, snapshot, batch_size):
     if snapshot is not None:
         manager.load_state_dict(torch.load(snapshot))
 
-    criterion = nn.CrossEntropyLoss()
+
     while not manager.stop_trigger:
         for i, batch in enumerate(train_loader):
             with manager.run_iteration():
@@ -112,20 +132,7 @@ def train(gpu, save_path, snapshot, batch_size):
                     'acc': accuracy.item(),
                 })
         
-        with torch.no_grad():
-            model.eval()
-            for i, batch in enumerate(test_loader):
-                x, t = batch
-                x, t, = x.to(device), t.to(device)
-                output = model(x)
-                loss = criterion(output, t)
 
-                accuracy = (output.argmax(dim=1) == t).float().mean()
-                ppe.reporting.report({
-                    'test loss': loss.item(),
-                    'test acc': accuracy.item(),
-                })                
-            model.train()
 @click.command()
 @click.option('--save_path', default='checkpoint/test', type=Path)
 @click.option('--snapshot', default=None, type=Path)
