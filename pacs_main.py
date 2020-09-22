@@ -171,33 +171,36 @@ def eval(gpu, save_path, data_root, data, exp_num, threshold, snapshot, batch_si
         data=data, data_root=data_root, source_domain=source_domain, target_domain=target_domain,
         batch_size=batch_size, num_workers=4, classes=[0, 1, 2, 3, 4, 5, 6])
 
-    with torch.no_grad():
-        # features = []
-        # outputs = []
-        # ys = []
-        # for x, t in source_train:
-        #     x = x.to(device)
-        #     t = t.to(device)
-        #     feature = torch.flatten(model(x), 1)
-        #     output = head(feature)
-        #     features.append(feature.cpu().numpy())
-        #     outputs.append(output.cpu().numpy())
-        #     ys.append(t.cpu().numpy())
-        # features = np.concatenate(features, axis=0)
-        # ys = np.concatenate(ys, axis=0)
-        # mu_hat = np.mean(features, axis=0)
-        # sigma_hat = (features - mu_hat).T @ (features - mu_hat) / len(features)
-        # np.savez(f'{str(save_path).split("/")[-1]}_mahalanobis_statistics.npz', mu_hat=mu_hat, sigma_hat=sigma_hat)
 
-        sample_mean, sample_precision = estimate_sample_statistics(model, source_train)
-        # inv_s_hat = np.linalg.inv(sigma_hat)
-        features = []
-        ys = []
-        outputs = []
-        domains = []
-        mahalanobis_socres = []
-        m_list = [0.0, 0.01, 0.005, 0.002, 0.0014, 0.001, 0.0005]
-        for loader, d in zip([source_eval, target_eval], [np.zeros, np.ones]):
+    sample_mean, sample_precision = estimate_sample_statistics(model, source_train)
+
+    # features = []
+    # outputs = []
+    # ys = []
+    # for x, t in source_train:
+    #     x = x.to(device)
+    #     t = t.to(device)
+    #     feature = torch.flatten(model(x), 1)
+    #     output = head(feature)
+    #     features.append(feature.cpu().numpy())
+    #     outputs.append(output.cpu().numpy())
+    #     ys.append(t.cpu().numpy())
+    # features = np.concatenate(features, axis=0)
+    # ys = np.concatenate(ys, axis=0)
+    # mu_hat = np.mean(features, axis=0)
+    # sigma_hat = (features - mu_hat).T @ (features - mu_hat) / len(features)
+    # np.savez(f'{str(save_path).split("/")[-1]}_mahalanobis_statistics.npz', mu_hat=mu_hat, sigma_hat=sigma_hat)
+
+
+    # inv_s_hat = np.linalg.inv(sigma_hat)
+    features = []
+    ys = []
+    outputs = []
+    domains = []
+    mahalanobis_socres = []
+    m_list = [0.0, 0.01, 0.005, 0.002, 0.0014, 0.001, 0.0005]
+    for loader, d in zip([source_eval, target_eval], [np.zeros, np.ones]):
+        with torch.no_grad():
             for x, t in loader:
                 x = x.to(device)
                 t = t.to(device)
@@ -209,20 +212,20 @@ def eval(gpu, save_path, data_root, data, exp_num, threshold, snapshot, batch_si
                 ys.append(t.cpu().numpy())
                 domains.append(d(len(feature)))
                 mahalanobis_socres.append(m_score.cpu().numpy())
-        features = np.concatenate(features, axis=0)
-        ys = np.concatenate(ys, axis=0)
-        outputs = np.concatenate(outputs, axis=0)
-        domains = np.concatenate(domains, axis=0)
-        mahalanobis_socres = np.concatenate(mahalanobis_socres, axis=0)
-        np.savez(f'{str(save_path).split("/")[-1]}_predicts.npz', feature=features, y=ys, domain=domains, output=outputs, mahalanobis=mahalanobis_socres)
+    features = np.concatenate(features, axis=0)
+    ys = np.concatenate(ys, axis=0)
+    outputs = np.concatenate(outputs, axis=0)
+    domains = np.concatenate(domains, axis=0)
+    mahalanobis_socres = np.concatenate(mahalanobis_socres, axis=0)
+    np.savez(f'{str(save_path).split("/")[-1]}_predicts.npz', feature=features, y=ys, domain=domains, output=outputs, mahalanobis=mahalanobis_socres)
 
-        # entropy = -torch.sum(F.softmax(output, 1) * F.log_softmax(output, 1), 1)
-        # unknown = ((entropy > 0.01).float() * (output.max() + 1e-8)).reshape(-1, 1)
-        # md = - np.diag((features - mu_hat) @ inv_s_hat @ (features - mu_hat).T)
-        # unknown = ((md > threshold).astype(float) * (outputs.max() + 1e-8)).reshape(-1, 1)
-        # outputs = np.concatenate([outputs, unknown], axis=1)
-        # corrects = (outputs.argmax(axis=1) == ys).astype(float)
-        # print(f'acc {corrects.mean()}')
+    # entropy = -torch.sum(F.softmax(output, 1) * F.log_softmax(output, 1), 1)
+    # unknown = ((entropy > 0.01).float() * (output.max() + 1e-8)).reshape(-1, 1)
+    # md = - np.diag((features - mu_hat) @ inv_s_hat @ (features - mu_hat).T)
+    # unknown = ((md > threshold).astype(float) * (outputs.max() + 1e-8)).reshape(-1, 1)
+    # outputs = np.concatenate([outputs, unknown], axis=1)
+    # corrects = (outputs.argmax(axis=1) == ys).astype(float)
+    # print(f'acc {corrects.mean()}')
 
 
 def estimate_sample_statistics(model, train_loader):
