@@ -227,7 +227,7 @@ def eval(gpu, save_path, data_root, data, exp_num, threshold, snapshot, batch_si
 
 def estimate_sample_statistics(model, train_loader):
     import sklearn.covariance
-    device = next(models.parameters()).device
+    device = next(model.parameters()).device
     model.eval()
     glasso = sklearn.covariance.EmpiricalCovariance(assume_centered=False)
 
