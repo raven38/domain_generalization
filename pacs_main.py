@@ -268,7 +268,7 @@ def calc_mahalanobis_score(model, data, sample_mean, sample_precision, m_list):
     gradient = (gradient.float() - 0.5) * 2
 
     with torch.no_grad():
-        m_scores = torch.cat([calc_score(m) for m in m_list], dim=1)
+        m_scores = torch.cat([calc_score(m) for m in m_list]).view(1, -1)
     return m_scores
 
 
