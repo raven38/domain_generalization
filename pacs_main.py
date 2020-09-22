@@ -234,7 +234,7 @@ def estimate_sample_statistics(model, train_loader):
     features = []
     for data, _ in train_loader:
         data = data.to(device)
-        feature = torch.flatten(model(x), 1)
+        feature = torch.flatten(model(data), 1)
         features.append(feature)
 
     features = torch.cat(features, dim=0)
