@@ -202,13 +202,13 @@ def eval(gpu, save_path, data_root, data, exp_num, threshold, snapshot, batch_si
     for loader, d in zip([source_eval, target_eval], [np.zeros, np.ones]):
         for x, t in loader:
             x = x.to(device)
-            t = t.to(device)
-            feature = torch.flatten(model(x), 1)
-            output = head(feature)
+            with torch.no_grad():
+                feature = torch.flatten(model(x), 1)
+                output = head(feature)
             m_score = calc_mahalanobis_score(model, x, sample_mean, sample_precision, m_list)
             features.append(feature.cpu().numpy())
             outputs.append(output.cpu().numpy())
-            ys.append(t.cpu().numpy())
+            ys.append(t.numpy())
             domains.append(d(len(feature)))
             mahalanobis_socres.append(m_score.cpu().numpy())
     features = np.concatenate(features, axis=0)
@@ -264,10 +264,11 @@ def calc_mahalanobis_score(model, data, sample_mean, sample_precision, m_list):
         m_score = -0.5 * torch.mm(torch.mm(zero_f, sample_precision), zero_f.t()).diag()
         return m_score
 
-    gradient = torch.ge(data.grad.data, 0)
-    gradient = (gradient.float() - 0.5) * 2
+    with torch.no_grad():
+        gradient = torch.ge(data.grad.data, 0)
+        gradient = (gradient.float() - 0.5) * 2
 
-    m_scores = torch.cat([calc_score(m) for m in m_list], dim=1)
+        m_scores = torch.cat([calc_score(m) for m in m_list], dim=1)
     return m_scores
 
 
