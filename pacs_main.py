@@ -241,7 +241,7 @@ def estimate_sample_statistics(model, train_loader):
     sample_mean = torch.mean(features, dim=0)
     X = features - sample_mean
     glasso.fit(X.cpu().numpy())
-    sample_precision = glasso.get_precision()
+    sample_precision = torch.from_numpy(glasso.get_precision()).float().to(device)
     return sample_mean, sample_precision
 
 
