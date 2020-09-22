@@ -171,8 +171,8 @@ def eval(gpu, save_path, data_root, data, exp_num, threshold, snapshot, batch_si
         data=data, data_root=data_root, source_domain=source_domain, target_domain=target_domain,
         batch_size=batch_size, num_workers=4, classes=[0, 1, 2, 3, 4, 5, 6])
 
-
-    sample_mean, sample_precision = estimate_sample_statistics(model, source_train)
+    with torch.no_grad():
+        sample_mean, sample_precision = estimate_sample_statistics(model, source_train)
 
     # features = []
     # outputs = []
@@ -200,18 +200,17 @@ def eval(gpu, save_path, data_root, data, exp_num, threshold, snapshot, batch_si
     mahalanobis_socres = []
     m_list = [0.0, 0.01, 0.005, 0.002, 0.0014, 0.001, 0.0005]
     for loader, d in zip([source_eval, target_eval], [np.zeros, np.ones]):
-        with torch.no_grad():
-            for x, t in loader:
-                x = x.to(device)
-                t = t.to(device)
-                feature = torch.flatten(model(x), 1)
-                output = head(feature)
-                m_score = calc_mahalanobis_score(model, x, sample_mean, sample_precision, m_list)
-                features.append(feature.cpu().numpy())
-                outputs.append(output.cpu().numpy())
-                ys.append(t.cpu().numpy())
-                domains.append(d(len(feature)))
-                mahalanobis_socres.append(m_score.cpu().numpy())
+        for x, t in loader:
+            x = x.to(device)
+            t = t.to(device)
+            feature = torch.flatten(model(x), 1)
+            output = head(feature)
+            m_score = calc_mahalanobis_score(model, x, sample_mean, sample_precision, m_list)
+            features.append(feature.cpu().numpy())
+            outputs.append(output.cpu().numpy())
+            ys.append(t.cpu().numpy())
+            domains.append(d(len(feature)))
+            mahalanobis_socres.append(m_score.cpu().numpy())
     features = np.concatenate(features, axis=0)
     ys = np.concatenate(ys, axis=0)
     outputs = np.concatenate(outputs, axis=0)
@@ -239,7 +238,7 @@ def estimate_sample_statistics(model, train_loader):
         data = data.to(device)
         feature = torch.flatten(model(data), 1)
         features.append(feature)
-
+        
     features = torch.cat(features, dim=0)
     sample_mean = torch.mean(features, dim=0)
     X = features - sample_mean
