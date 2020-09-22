@@ -227,7 +227,7 @@ def eval(gpu, save_path, data_root, data, exp_num, threshold, snapshot, batch_si
 
 def estimate_sample_statistics(model, train_loader):
     import sklearn.covariance
-    device = model.device
+    device = next(models.parameters()).device
     model.eval()
     glasso = sklearn.covariance.EmpiricalCovariance(assume_centered=False)
 
@@ -246,10 +246,8 @@ def estimate_sample_statistics(model, train_loader):
 
 
 def calc_mahalanobis_score(model, data, sample_mean, sample_precision, m_list):
-    device = model.device
     model.eval()
 
-    data = data.to(device)
     feature = torch.flatten(model(data), 1)
 
     zero_f = feature - sample_mean
