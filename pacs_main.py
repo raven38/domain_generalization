@@ -249,7 +249,7 @@ def estimate_sample_statistics(model, train_loader):
 
 def calc_mahalanobis_score(model, data, sample_mean, sample_precision, m_list):
     model.eval()
-
+    data.requires_grad_(requires_grad=True)
     feature = torch.flatten(model(data), 1)
 
     zero_f = feature - sample_mean
